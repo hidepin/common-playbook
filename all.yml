@@ -2,4 +2,4 @@
 # file: all.yml
 - hosts: all
   roles:
-    - common
+    - { role: common, when: "ansible_os_family == 'RedHat'" }

@@ -1,4 +1,5 @@
 ntp_server: "{{ ansible_default_ipv4.gateway }}"
+#kdump_partition: "/dump"
 common_user:
   # user/password="hidepin/hidepin123"
-  - { name: 'hidepin', password: '$1$SomeSalt$buSRLdQkj4QgWzx.tbjqv1', uid: '1001', group: 'hidepin', gid: '1001' }
+  - { name: 'hidepin', password: '$1$SomeSalt$buSRLdQkj4QgWzx.tbjqv1', uid: '1000', group: 'hidepin', gid: '1000' }
