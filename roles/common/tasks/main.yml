@@ -1,5 +1,36 @@
 ---
 # file: roles/common/tasks/main.yml
+- block:
+  - name: input rhel_subscription username
+    pause: prompt="input rhel subscription username"
+    run_once: true
+    register: rhel_subscription_username
+    when: rhel_subscription.username is undefined
+
+  - name: input rhel_subscription password
+    pause: prompt="input rhel subscription password"
+    run_once: true
+    register: rhel_subscription_password
+    when: rhel_subscription.password is undefined
+
+  - name: input rhel_subscription pool
+    pause: prompt="input rhel subscription pool"
+    run_once: true
+    register: rhel_subscription_pool
+    when: rhel_subscription.pool is undefined
+
+  - name: set rhel_subscription
+    set_fact:
+      rhel_subscription:
+        username: "{{ (rhel_subscription_username.user_input is defined )|ternary(rhel_subscription_username.user_input|default(), rhel_subscription.username) }}"
+        password: "{{ (rhel_subscription_password.user_input is defined )|ternary(rhel_subscription_password.user_input|default(), rhel_subscription.password) }}"
+        pool: "{{ (rhel_subscription_pool.user_input is defined )|ternary(rhel_subscription_pool.user_input|default(), rhel_subscription.pool) }}"
+
+  when: >
+    ansible_distribution == "RedHat" and
+    ansible_distribution_major_version == '7' and
+    rhel_subscription is defined
+
 - name: packages install
   yum: name="{{ item }}" state=present
   with_items:
@@ -31,12 +62,38 @@
     register: is_hosts_setting
     with_items: "{{ groups['all'] }}"
 
+  - name: (rhel7 family) yum proxy settings
+    ini_file: >
+      dest=/etc/yum.conf
+      section=main
+      option={{ item.option }}
+      value={{ item.value }}
+      no_extra_spaces=true
+      backup=yes
+    with_items:
+      - { option: 'proxy', value: "{{ proxy_env.http_proxy|default() }}" }
+    register: is_yum_proxy_setting
+    when: proxy_env.http_proxy is defined
+
+  - name: nsswitch.conf settings
+    lineinfile: >
+      dest=/etc/nsswitch.conf
+      regexp="^(hosts:.*) dns(.*)"
+      line="\1\2"
+      state=present
+      backrefs=yes
+      backup=yes
+    register: is_nsswitch_setting
+    when: ansible_dns.nameservers is undefined
+
   always:
-  - name: backup settings
+  - name: common backup settings
     include: backup.yml
     with_flattened:
-      - "{{ is_hosts_setting.results|default() }}"
       - "{{ is_selinux_setting|default() }}"
+      - "{{ is_hosts_setting.results|default() }}"
+      - "{{ is_yum_proxy_setting.results|default() }}"
+      - "{{ is_nsswitch_setting|default() }}"
     loop_control:
       loop_var: backup_item
 

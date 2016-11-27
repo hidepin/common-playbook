@@ -1,5 +1,13 @@
 ---
 # file: roles/common/defaults/main.yml
+proxy_env:
+  no_proxy: '*'
+#  http_proxy: http://172.16.111.1:8080
+#  https_proxy: http://172.16.111.1:8080
+#rhel_subscription:
+#  username: 'username'
+#  password: 'password'
+#  pool: 'pool'
 #ntp_server: 172.16.111.1
 grub_cfg_uefi: "/boot/efi/EFI/{{ ansible_distribution|lower }}/grub.cfg"
 grub_cfg_legacy: "/boot/grub2/grub.cfg"
