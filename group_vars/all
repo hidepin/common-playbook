@@ -1,3 +1,7 @@
+rhel_subscription:
+  username: 'username'
+  password: 'password'
+  pool: 'pool'
 ntp_server: "{{ ansible_default_ipv4.gateway }}"
 #kdump_partition: "/dump"
 common_user:
